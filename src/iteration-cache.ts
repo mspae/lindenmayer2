@@ -1,15 +1,18 @@
-import { SystemState } from "./utils/state";
+import { SymbolListState } from "./utils/state";
 
 export class IterationCache<Params extends object = {}> {
   private _currentSystemHash: number;
-  private _cache: Map<string, SystemState<Params>>;
+  private _cache: Map<string, SymbolListState<Params>>;
 
   constructor() {
     this._currentSystemHash = null;
     this._cache = new Map();
   }
 
-  requestIteration(systemHash: number, n: number) {
+  requestIteration(
+    systemHash: number,
+    n: number
+  ): null | SymbolListState<Params> {
     if (this._currentSystemHash !== systemHash) {
       return null;
     }
@@ -22,7 +25,7 @@ export class IterationCache<Params extends object = {}> {
   setIterationCacheEntry(
     systemHash: number,
     n: number,
-    entry: SystemState<Params>
+    entry: SymbolListState<Params>
   ) {
     if (this._currentSystemHash !== systemHash) {
       this.cleanCache();

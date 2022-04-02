@@ -17,7 +17,9 @@
     "build": "microbundle",
     "dev": "microbundle watch",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js",
+    "test:watch": "jest --watch",
+    "test:watch:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js --watchAll --runInBand"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",

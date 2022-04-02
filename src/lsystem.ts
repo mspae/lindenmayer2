@@ -1,6 +1,7 @@
 import { IterationCache } from "./iteration-cache";
 import { hash } from "./utils/hash";
 import { randomlySelectValueByProbability } from "./utils/random";
+import { SymbolState, SymbolListState } from "./utils/state";
 
 type ContextIdentifier = string | string[];
 
@@ -18,6 +19,7 @@ type FunctionSuccessor<Params extends object = {}> = (context: {
 
 type Successor<Params extends object = {}> =
   | SymbolState<Params>
+  | SymbolState<Params>[]
   | FunctionSuccessor<Params>
   | StochasticSuccessor<Params>;
 
@@ -32,30 +34,25 @@ type RuleDefinition<Params extends object = {}> = {
   successor: Successor<Params>;
 };
 
-type SystemState<Params extends object = {}> = SymbolState<Params>[];
-
-type SymbolState<Params extends object = {}> = {
-  symbol: string;
-  params: Params;
-  branch?: SystemState<Params>;
-};
-
 export class LSystem<Params extends object = {}> {
-  private _iteration: number;
   private _cache: IterationCache<Params>;
   private _rules: Map<string, RuleDefinition<Params>>;
-  private _systemId: number;
-  private _initial: SystemState<Params>;
+  private _initial: SymbolListState<Params>;
+  private _systemHash: number;
 
   constructor({
     rules,
     initial,
   }: {
-    initial: SystemState<Params>;
-    rules?: { [x: string]: RuleDefinition<Params> };
+    initial: SymbolListState<Params>;
+    rules?: RuleDefinition<Params>[];
   }) {
     this._cache = new IterationCache();
-    this._rules = new Map(rules ? Object.entries(rules) : []);
+    this._rules = new Map(
+      rules
+        ? rules.reduce((acc, rule) => [...acc, [rule.symbol, rule]], [])
+        : []
+    );
     this._initial = initial;
     this.recalculateSystemHash();
   }
@@ -75,67 +72,95 @@ export class LSystem<Params extends object = {}> {
     this.recalculateSystemHash();
   }
 
-  recalculateSystemHash() {
-    const identifierString =
-      JSON.stringify(this._initial) +
-      JSON.stringify(Array.from(this._rules.entries()));
-    this._systemId = hash(identifierString);
-  }
-
-  get iteration() {
-    return this._iteration;
-  }
-
-  get systemHash() {
-    return this._systemId;
-  }
-
   cleanCache() {
     this._cache.cleanCache();
   }
 
-  getOutput(n: number, bypassCache = false) {
-    this._iteration = n;
-
+  getOutput(
+    iteration: number,
+    bypassCache = false,
+    recalculateAllIterations = false
+  ) {
     if (!bypassCache) {
-      const cachedOutput = this._cache.requestIteration(this.systemHash, n);
+      const cachedOutput = this._cache.requestIteration(
+        this._systemHash,
+        iteration
+      );
       if (cachedOutput) {
         return cachedOutput;
       }
     }
+
+    return this.getOutputForIteration(iteration, recalculateAllIterations);
   }
 
-  getOutputForIteration(n: number, recalculateAllIterations = false) {
+  /**
+   * Get a string reprensation of the system definition.
+   *
+   * Note: This may not work properly if you are using object references and
+   * successor functions in your rule set.
+   */
+  getSerializedSystemDefintion() {
+    return JSON.stringify([this._initial, Array.from(this._rules.entries())]);
+  }
+
+  /**
+   * Set the system definition from a serialized string.
+   *
+   * Note: This may not work properly if you are using object references and
+   * successor functions in your rule set.
+   */
+  setSystemDefinitionFromSerializedString(input: string) {
+    try {
+      const [initial, rules] = JSON.parse(input);
+      this._initial = initial;
+      this._rules = new Map(rules);
+    } catch (e) {
+      throw new Error("Failed parsing serialized system definition!");
+    }
+  }
+
+  private recalculateSystemHash() {
+    const identifierString =
+      JSON.stringify(this._initial) +
+      JSON.stringify(Array.from(this._rules.entries()));
+    this._systemHash = hash(identifierString);
+  }
+
+  private getOutputForIteration(n: number, recalculateAllIterations = false) {
     let currIteration = 0;
     let currResult = this._initial;
 
+    if (n === 0) {
+      return this._initial;
+    }
+
     if (!recalculateAllIterations) {
-      while (typeof currResult === "undefined") {
+      let cacheN = n - 1;
+      while (typeof currResult === "undefined" && cacheN > 0) {
         const cachedValue = this._cache.requestIteration(
-          this.systemHash,
-          n - 1
+          this._systemHash,
+          cacheN
         );
         if (cachedValue) {
-          currIteration = n - 1;
+          currIteration = cacheN;
           currResult = cachedValue;
+        } else {
+          cacheN = cacheN - 1;
         }
       }
     }
 
     while (currIteration < n) {
-      currResult = this.applyRules(currResult, n);
-      currIteration = n + 1;
-
-      this._cache.setIterationCacheEntry(
-        this.systemHash,
-        currIteration,
-        currResult
-      );
+      currIteration = currIteration + 1;
+      currResult = this.applyRules(currResult, currIteration);
     }
+
+    return currResult;
   }
 
-  applyRules(
-    input: SystemState<Params>,
+  private applyRules(
+    input: SymbolListState<Params>,
     iteration: number,
     parentSymbolState?: SymbolState<Params>
   ) {
@@ -144,19 +169,27 @@ export class LSystem<Params extends object = {}> {
       result = this.applyRule(result, def, iteration, parentSymbolState);
     });
 
+    this._cache.setIterationCacheEntry(this._systemHash, iteration, result);
+
     return result;
   }
 
-  applyRule(
-    input: SystemState<Params>,
+  private applyRule(
+    input: SymbolListState<Params>,
     rule: RuleDefinition<Params>,
     iteration: number,
     parentSymbolState?: SymbolState<Params>
   ) {
-    return input.reduce<SystemState<Params>>(
+    return input.reduce<SymbolListState<Params>>(
       (acc, currentSymbolState, currentIndex) => {
         const prevSymbolState = acc[currentIndex - 1];
         const nextSymbolState = acc[currentIndex + 1];
+
+        // Early return if the state was touched within this iteration
+        // (previous rule)
+        if (currentSymbolState.lastTouched === iteration) {
+          return [...acc, currentSymbolState];
+        }
 
         // Early return if the symbol does not match
         if (currentSymbolState.symbol !== rule.symbol) {
@@ -198,7 +231,7 @@ export class LSystem<Params extends object = {}> {
 
         return [
           ...acc,
-          this.applyRuleOnSymbol({
+          ...this.applyRuleOnSymbol({
             currentSymbolState,
             iteration,
             rule,
@@ -208,11 +241,11 @@ export class LSystem<Params extends object = {}> {
           }),
         ];
       },
-      [] as SystemState<Params>
+      [] as SymbolListState<Params>
     );
   }
 
-  applyRuleOnSymbol({
+  private applyRuleOnSymbol({
     currentSymbolState,
     rule,
     iteration,
@@ -228,12 +261,18 @@ export class LSystem<Params extends object = {}> {
     parentSymbolState?: SymbolState<Params>;
   }) {
     // StochasticSuccessor
-    if (Array.isArray(rule.successor)) {
+    if (
+      Array.isArray(rule.successor) &&
+      typeof (rule.successor as unknown as StochasticSuccessor<Params>)[0]
+        .probability !== "undefined"
+    ) {
       return this.applyRuleOnSymbol({
         currentSymbolState,
         rule: {
           ...rule,
-          successor: randomlySelectValueByProbability(rule.successor).successor,
+          successor: randomlySelectValueByProbability(
+            rule.successor as unknown as StochasticSuccessor<Params>
+          ).successor,
         },
         iteration,
         prevSymbolState,
@@ -244,17 +283,30 @@ export class LSystem<Params extends object = {}> {
 
     // FunctionSuccessor
     if (typeof rule.successor === "function") {
-      return rule.successor({
-        currentSymbolState,
-        prevSymbolState,
-        nextSymbolState,
-        parentSymbolState,
-      });
+      return [
+        {
+          ...rule.successor({
+            currentSymbolState,
+            prevSymbolState,
+            nextSymbolState,
+            parentSymbolState,
+          }),
+          lastTouched: iteration,
+        },
+      ];
     }
 
-    // SuccessorDefinition is a simple SymbolState object
-    if (typeof rule.successor.symbol !== "undefined") {
-      return rule.successor.symbol;
+    // Multiple SymbolState array
+    if (Array.isArray(rule.successor)) {
+      return (rule.successor as SymbolState<Params>[]).map((s) => ({
+        ...s,
+        lastTouched: iteration,
+      }));
+    }
+
+    // Simple single SymbolState object
+    if (typeof rule.successor.symbol === "string") {
+      return [{ ...rule.successor, lastTouched: iteration }];
     }
 
     throw new Error(
