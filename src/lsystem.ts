@@ -1,7 +1,6 @@
 import { IterationCache } from "./iteration-cache";
 import { hash } from "./utils/hash";
 import { randomlySelectValueByProbability } from "./utils/random";
-import { SymbolState, SystemState } from "./utils/state";
 
 type ContextIdentifier = string | string[];
 
@@ -31,6 +30,14 @@ type RuleDefinition<Params extends object = {}> = {
    * symbol was one of nextSymbol (string[]) */
   nextSymbol?: ContextIdentifier;
   successor: Successor<Params>;
+};
+
+type SystemState<Params extends object = {}> = SymbolState<Params>[];
+
+type SymbolState<Params extends object = {}> = {
+  symbol: string;
+  params: Params;
+  branch?: SystemState<Params>;
 };
 
 export class LSystem<Params extends object = {}> {
