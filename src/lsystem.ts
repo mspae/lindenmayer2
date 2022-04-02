@@ -72,10 +72,6 @@ export class LSystem<Params extends object = {}> {
     this.recalculateSystemHash();
   }
 
-  cleanCache() {
-    this._cache.cleanCache();
-  }
-
   getOutput(
     iteration: number,
     bypassCache = false,
@@ -154,6 +150,12 @@ export class LSystem<Params extends object = {}> {
     while (currIteration < n) {
       currIteration = currIteration + 1;
       currResult = this.applyRules(currResult, currIteration);
+
+      this._cache.setIterationCacheEntry(
+        this._systemHash,
+        currIteration,
+        currResult
+      );
     }
 
     return currResult;
@@ -164,12 +166,20 @@ export class LSystem<Params extends object = {}> {
     iteration: number,
     parentSymbolState?: SymbolState<Params>
   ) {
-    let result = input;
+    let result = input.map((symbolState) => {
+      if (typeof symbolState.branch === "undefined") {
+        return symbolState;
+      }
+      // is branch symbol, perform replacement on the branch symbols first
+      return {
+        ...symbolState,
+        branch: this.applyRules(symbolState.branch, iteration, symbolState),
+      };
+    });
+
     this._rules.forEach((def) => {
       result = this.applyRule(result, def, iteration, parentSymbolState);
     });
-
-    this._cache.setIterationCacheEntry(this._systemHash, iteration, result);
 
     return result;
   }
@@ -218,15 +228,6 @@ export class LSystem<Params extends object = {}> {
               !rule.prevSymbol.includes(prevSymbolState.symbol)))
         ) {
           return [...acc, currentSymbolState];
-        }
-
-        // is branch symbol, perform replacement on the branch symbols first
-        if (currentSymbolState.branch) {
-          currentSymbolState.branch = this.applyRules(
-            currentSymbolState.branch,
-            iteration,
-            currentSymbolState
-          );
         }
 
         return [
