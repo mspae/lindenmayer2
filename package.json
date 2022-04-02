@@ -5,17 +5,17 @@
   "version": "0.1.0",
   "source": "src/index.ts",
   "exports": {
-    "require": "./dist/lindenmayer.cjs",
-    "default": "./dist/lindenmayer.modern.js"
+    "require": "./dist/lindenmayer2.cjs",
+    "default": "./dist/lindenmayer2.modern.js"
   },
-  "main": "./dist/lindenmayer.cjs",
-  "module": "./dist/lindenmayer.module.js",
-  "unpkg": "./dist/lindenmayer.umd.js",
+  "main": "./dist/lindenmayer2.cjs",
+  "module": "./dist/lindenmayer2.module.js",
+  "unpkg": "./dist/lindenmayer2.umd.js",
   "author": "Martin Spencer <mail@martinspencer.de>",
   "license": "MIT",
   "scripts": {
-    "build": "microbundle",
-    "dev": "microbundle watch",
+    "build": "microbundle --worker",
+    "dev": "microbundle --worker watch",
     "test": "jest",
     "test:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
