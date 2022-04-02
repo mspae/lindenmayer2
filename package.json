@@ -1,0 +1,31 @@
+{
+  "name": "lindenmayer2",
+  "type": "module",
+  "description": "Yet another L-system implementation.",
+  "version": "0.1.0",
+  "source": "src/index.ts",
+  "exports": {
+    "require": "./dist/lindenmayer.cjs",
+    "default": "./dist/lindenmayer.modern.js"
+  },
+  "main": "./dist/lindenmayer.cjs",
+  "module": "./dist/lindenmayer.module.js",
+  "unpkg": "./dist/lindenmayer.umd.js",
+  "author": "Martin Spencer <mail@martinspencer.de>",
+  "license": "MIT",
+  "scripts": {
+    "build": "microbundle",
+    "dev": "microbundle watch",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.8",
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "microbundle": "^0.14.2",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {}
+}
