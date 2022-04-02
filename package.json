@@ -20,7 +20,7 @@
     "test:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
     "test:watch:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js --watchAll --runInBand",
-    "prepublish": "npm run test && npm run build"
+    "prepare": "npm run test && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",
