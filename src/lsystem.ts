@@ -175,4 +175,3 @@ export class LSystem<Params extends object = {}> {
     );
   }
 }
-export { LSystem as Lindenmayer2 };
