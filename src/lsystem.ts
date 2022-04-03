@@ -1,5 +1,4 @@
 import { IterationCache } from "./iteration-cache";
-import { hash } from "./utils/hash";
 import { randomlySelectValueByProbability } from "./utils/random";
 import { SymbolState, SymbolListState } from "./utils/state";
 
@@ -38,7 +37,6 @@ export class LSystem<Params extends object = {}> {
   private _cache: IterationCache<Params>;
   private _rules: Map<string, RuleDefinition<Params>>;
   private _initial: SymbolListState<Params>;
-  private _systemHash: number;
 
   constructor({
     rules,
@@ -54,12 +52,12 @@ export class LSystem<Params extends object = {}> {
         : []
     );
     this._initial = initial;
-    this.recalculateSystemHash();
+    this._cache.cleanCache();
   }
 
   addRule(rule: RuleDefinition<Params>) {
     this._rules.set(rule.symbol, rule);
-    this.recalculateSystemHash();
+    this._cache.cleanCache();
   }
 
   removeRule(rule: Omit<RuleDefinition<Params>, "successor">) {
@@ -69,7 +67,7 @@ export class LSystem<Params extends object = {}> {
       );
     }
     this._rules.delete(rule.symbol);
-    this.recalculateSystemHash();
+    this._cache.cleanCache();
   }
 
   getOutput(
@@ -78,10 +76,7 @@ export class LSystem<Params extends object = {}> {
     recalculateAllIterations = false
   ) {
     if (!bypassCache) {
-      const cachedOutput = this._cache.requestIteration(
-        this._systemHash,
-        iteration
-      );
+      const cachedOutput = this._cache.requestIteration(iteration);
       if (cachedOutput) {
         return cachedOutput;
       }
@@ -116,13 +111,6 @@ export class LSystem<Params extends object = {}> {
     }
   }
 
-  private recalculateSystemHash() {
-    const identifierString =
-      JSON.stringify(this._initial) +
-      JSON.stringify(Array.from(this._rules.entries()));
-    this._systemHash = hash(identifierString);
-  }
-
   private getOutputForIteration(n: number, recalculateAllIterations = false) {
     let currIteration = 0;
     let currResult = this._initial;
@@ -134,10 +122,7 @@ export class LSystem<Params extends object = {}> {
     if (!recalculateAllIterations) {
       let cacheN = n - 1;
       while (typeof currResult === "undefined" && cacheN > 0) {
-        const cachedValue = this._cache.requestIteration(
-          this._systemHash,
-          cacheN
-        );
+        const cachedValue = this._cache.requestIteration(cacheN);
         if (cachedValue) {
           currIteration = cacheN;
           currResult = cachedValue;
@@ -151,11 +136,7 @@ export class LSystem<Params extends object = {}> {
       currIteration = currIteration + 1;
       currResult = this.applyRules(currResult, currIteration);
 
-      this._cache.setIterationCacheEntry(
-        this._systemHash,
-        currIteration,
-        currResult
-      );
+      this._cache.setIterationCacheEntry(currIteration, currResult);
     }
 
     return currResult;
