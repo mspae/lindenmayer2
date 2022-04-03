@@ -2,13 +2,14 @@
   "name": "lindenmayer2",
   "type": "module",
   "description": "Yet another L-system implementation.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "source": "src/index.ts",
   "exports": {
     "require": "./dist/lindenmayer2.cjs",
     "default": "./dist/lindenmayer2.modern.js"
   },
-  "main": "./dist/lindenmayer2.module.js",
+  "main": "./dist/lindenmayer2.module",
+  "typings": "./dist/index",
   "module": "./dist/lindenmayer2.module.js",
   "unpkg": "./dist/lindenmayer2.umd.js",
   "author": "Martin Spencer <mail@martinspencer.de>",
