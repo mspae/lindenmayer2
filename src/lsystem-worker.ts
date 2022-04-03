@@ -1,4 +1,4 @@
 export const LSystemWorker = new Worker(
-  new URL("lsystem.ts", import.meta.url),
+  new URL("lindenmayer2.umd.js", import.meta.url),
   { type: "module" }
 );
