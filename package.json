@@ -8,7 +8,7 @@
     "require": "./dist/lindenmayer2.cjs",
     "default": "./dist/lindenmayer2.modern.js"
   },
-  "main": "./dist/lindenmayer2.cjs",
+  "main": "./dist/lindenmayer2.module.js",
   "module": "./dist/lindenmayer2.module.js",
   "unpkg": "./dist/lindenmayer2.umd.js",
   "author": "Martin Spencer <mail@martinspencer.de>",
@@ -30,7 +30,5 @@
     "ts-jest": "^27.1.4",
     "typescript": "^4.6.3"
   },
-  "dependencies": {
-    "comlink": "^4.3.1"
-  }
+  "dependencies": {}
 }

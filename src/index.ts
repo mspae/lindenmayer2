@@ -1,5 +1,4 @@
 export * from "./lsystem";
-export * from "./lsystem-worker";
 export {
   after,
   and,
