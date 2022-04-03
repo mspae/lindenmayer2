@@ -91,20 +91,34 @@ test("system definition serialization", () => {
   });
 
   expect(instance.getSerializedSystemDefintion()).toEqual(
-    '[[{"symbol":"A"}],[["A",{"symbol":"A","successor":[{"symbol":"A"},{"symbol":"B"}]}],["B",{"symbol":"B","successor":{"symbol":"A"}}]]]'
+    '[[{"symbol":"A"}],[["A",{"id":"A","condition":{"type":"match_symbol","symbol":"A"},"successor":[{"symbol":"A"},{"symbol":"B"}]}],["B",{"id":"B","condition":{"type":"match_symbol","symbol":"B"},"successor":{"symbol":"A"}}]]]'
   );
 
   instance.setSystemDefinitionFromSerializedString(
     JSON.stringify([
       strToSymbolList("BB"),
       [
-        ["B", { symbol: "B", successor: "BA" }],
-        ["A", { symbol: "A", successor: strToSymbolList("AAB") }],
+        [
+          "B",
+          {
+            id: "B",
+            condition: matchSymbol("B"),
+            successor: strToSymbolList("C"),
+          },
+        ],
+        [
+          "A",
+          {
+            id: "A",
+            condition: matchSymbol("A"),
+            successor: strToSymbolList("AAB"),
+          },
+        ],
       ],
     ])
   );
   expect(instance.getSerializedSystemDefintion()).toEqual(
-    '[[{"symbol":"B"},{"symbol":"B"}],[["B",{"symbol":"B","successor":"BA"}],["A",{"symbol":"A","successor":[{"symbol":"A"},{"symbol":"A"},{"symbol":"B"}]}]]]'
+    '[[{"symbol":"B"},{"symbol":"B"}],[["B",{"id":"B","condition":{"type":"match_symbol","symbol":"B"},"successor":[{"symbol":"C"}]}],["A",{"id":"A","condition":{"type":"match_symbol","symbol":"A"},"successor":[{"symbol":"A"},{"symbol":"A"},{"symbol":"B"}]}]]]'
   );
 });
 
@@ -140,7 +154,7 @@ test("successor functions", () => {
 
 test("context-aware successor definitions", () => {
   const instance = new LSystem({
-    initial: strToSymbolList("A"),
+    initial: strToSymbolList("ABCAB"),
     rules: [
       {
         id: "A",
@@ -150,16 +164,12 @@ test("context-aware successor definitions", () => {
       {
         id: "B",
         condition: and(matchSymbol("B"), relativeTo(-1, matchSymbol("A"))),
-        successor: strToSymbolList("ACBBC"),
-      },
-      {
-        id: "C",
-        condition: and(matchSymbol("C"), relativeTo(1, matchSymbol("B"))),
-        successor: strToSymbolList("AB"),
+        successor: strToSymbolList("_"),
+        allowOverride: true,
       },
     ],
   });
-  expect(symbolListToStr(instance.getOutput(4))).toEqual("ABCABBBCABBABCABBBB");
+  expect(symbolListToStr(instance.getOutput(1))).toEqual("CA_BCCA_B");
 });
 
 test("stochastic successor definitions", () => {
@@ -187,7 +197,7 @@ test("stochastic successor definitions", () => {
   expect(firstResult).not.toEqual(secondResult);
 });
 
-test.only("branch definitions", () => {
+test("branch definitions", () => {
   const instance = new LSystem({
     initial: strToSymbolList("A"),
     rules: [
