@@ -151,7 +151,7 @@ export const matchCondition = <Params extends object = {}>(context: {
     );
   }
   if (condition.type === "before") {
-    if (index === listState.length) {
+    if (index === listState.length - 1) {
       return false;
     }
     const nextSymbols = listState.slice(index + 1);
@@ -167,7 +167,7 @@ export const matchCondition = <Params extends object = {}>(context: {
   if (condition.type === "relative_to") {
     const absoluteIndex = index + condition.relativeIndex;
     // Prevent out-of-bounds absolute index
-    if (absoluteIndex < 0 || absoluteIndex > listState.length) {
+    if (absoluteIndex < 0 || absoluteIndex > listState.length - 1) {
       return false;
     }
     const symbolToCompare = listState[absoluteIndex];
