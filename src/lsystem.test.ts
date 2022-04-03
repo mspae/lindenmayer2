@@ -1,5 +1,5 @@
 import { LSystem } from "./lsystem";
-import { SymbolListState } from "./utils/state";
+import { SymbolListState } from "./utils/types";
 
 // NOTE: These two functions dont cleanly talk to each other.
 const symbolListToStr = (state: SymbolListState) =>

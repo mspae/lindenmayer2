@@ -1,4 +1,4 @@
-import { SymbolListState } from "./utils/state";
+import { SymbolListState } from "./utils/types";
 
 export class IterationCache<Params extends object = {}> {
   private _cache: Map<string, SymbolListState<Params>>;

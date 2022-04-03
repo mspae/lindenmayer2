@@ -1,37 +1,8 @@
 import { IterationCache } from "./iteration-cache";
+import { applySuccessorRule } from "./successor";
 import { randomlySelectValueByProbability } from "./utils/random";
-import { SymbolState, SymbolListState } from "./utils/state";
+import { SymbolState, SymbolListState, RuleDefinition } from "./utils/types";
 
-type ContextIdentifier = string | string[];
-
-type StochasticSuccessor<Params extends object = {}> = {
-  successor: Successor<Params>;
-  probability: number;
-}[];
-
-type FunctionSuccessor<Params extends object = {}> = (context: {
-  currentSymbolState: SymbolState<Params>;
-  parentSymbolState?: SymbolState<Params>;
-  prevSymbolState?: SymbolState<Params>;
-  nextSymbolState?: SymbolState<Params>;
-}) => SymbolState<Params>;
-
-type Successor<Params extends object = {}> =
-  | SymbolState<Params>
-  | SymbolState<Params>[]
-  | FunctionSuccessor<Params>
-  | StochasticSuccessor<Params>;
-
-type RuleDefinition<Params extends object = {}> = {
-  symbol: string;
-  /** match only if the previous Symbol equaled prevSymbol (string) or if the
-   * previous symbol was one of prevSymbol (string[]) */
-  prevSymbol?: ContextIdentifier;
-  /** match only if the next Symbol equaled nextSymbol (string) or if the next
-   * symbol was one of nextSymbol (string[]) */
-  nextSymbol?: ContextIdentifier;
-  successor: Successor<Params>;
-};
 
 export class LSystem<Params extends object = {}> {
   private _cache: IterationCache<Params>;
@@ -213,7 +184,7 @@ export class LSystem<Params extends object = {}> {
 
         return [
           ...acc,
-          ...this.applyRuleOnSymbol({
+          ...applySuccessorRule({
             currentSymbolState,
             iteration,
             rule,
@@ -224,75 +195,6 @@ export class LSystem<Params extends object = {}> {
         ];
       },
       [] as SymbolListState<Params>
-    );
-  }
-
-  private applyRuleOnSymbol({
-    currentSymbolState,
-    rule,
-    iteration,
-    prevSymbolState,
-    nextSymbolState,
-    parentSymbolState,
-  }: {
-    currentSymbolState: SymbolState<Params>;
-    rule: RuleDefinition<Params>;
-    iteration: number;
-    prevSymbolState?: SymbolState<Params>;
-    nextSymbolState?: SymbolState<Params>;
-    parentSymbolState?: SymbolState<Params>;
-  }) {
-    // StochasticSuccessor
-    if (
-      Array.isArray(rule.successor) &&
-      typeof (rule.successor as unknown as StochasticSuccessor<Params>)[0]
-        .probability !== "undefined"
-    ) {
-      return this.applyRuleOnSymbol({
-        currentSymbolState,
-        rule: {
-          ...rule,
-          successor: randomlySelectValueByProbability(
-            rule.successor as unknown as StochasticSuccessor<Params>
-          ).successor,
-        },
-        iteration,
-        prevSymbolState,
-        nextSymbolState,
-        parentSymbolState,
-      });
-    }
-
-    // FunctionSuccessor
-    if (typeof rule.successor === "function") {
-      return [
-        {
-          ...rule.successor({
-            currentSymbolState,
-            prevSymbolState,
-            nextSymbolState,
-            parentSymbolState,
-          }),
-          lastTouched: iteration,
-        },
-      ];
-    }
-
-    // Multiple SymbolState array
-    if (Array.isArray(rule.successor)) {
-      return (rule.successor as SymbolState<Params>[]).map((s) => ({
-        ...s,
-        lastTouched: iteration,
-      }));
-    }
-
-    // Simple single SymbolState object
-    if (typeof rule.successor.symbol === "string") {
-      return [{ ...rule.successor, lastTouched: iteration }];
-    }
-
-    throw new Error(
-      "A rule was matched but there was no valid successor defined!"
     );
   }
 }
