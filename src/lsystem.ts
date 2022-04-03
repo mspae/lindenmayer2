@@ -3,7 +3,6 @@ import { applySuccessorRule } from "./successor";
 import { randomlySelectValueByProbability } from "./utils/random";
 import { SymbolState, SymbolListState, RuleDefinition } from "./utils/types";
 
-
 export class LSystem<Params extends object = {}> {
   private _cache: IterationCache<Params>;
   private _rules: Map<string, RuleDefinition<Params>>;
@@ -143,54 +142,27 @@ export class LSystem<Params extends object = {}> {
     parentSymbolState?: SymbolState<Params>
   ) {
     return input.reduce<SymbolListState<Params>>(
-      (acc, currentSymbolState, currentIndex) => {
-        const prevSymbolState = acc[currentIndex - 1];
-        const nextSymbolState = acc[currentIndex + 1];
-
+      (acc, symbolState, index, listState) => {
         // Early return if the state was touched within this iteration
         // (previous rule)
-        if (currentSymbolState.lastTouched === iteration) {
-          return [...acc, currentSymbolState];
+        if (symbolState.lastTouched === iteration) {
+          return [...acc, symbolState];
         }
 
         // Early return if the symbol does not match
-        if (currentSymbolState.symbol !== rule.symbol) {
-          return [...acc, currentSymbolState];
-        }
-
-        // Early return if the rule.nextSymbol is not matched
-        if (
-          nextSymbolState &&
-          rule.nextSymbol &&
-          ((typeof rule.nextSymbol === "string" &&
-            nextSymbolState.symbol !== rule.nextSymbol) ||
-            (Array.isArray(rule.nextSymbol) &&
-              !rule.nextSymbol.includes(nextSymbolState.symbol)))
-        ) {
-          return [...acc, currentSymbolState];
-        }
-
-        // Early return if the rule.prevSymbol is not matched
-        if (
-          prevSymbolState &&
-          rule.prevSymbol &&
-          ((typeof rule.prevSymbol === "string" &&
-            prevSymbolState.symbol !== rule.prevSymbol) ||
-            (Array.isArray(rule.prevSymbol) &&
-              !rule.prevSymbol.includes(prevSymbolState.symbol)))
-        ) {
-          return [...acc, currentSymbolState];
+        if (symbolState.symbol !== rule.symbol) {
+          return [...acc, symbolState];
         }
 
         return [
           ...acc,
           ...applySuccessorRule({
-            currentSymbolState,
+            symbolState,
+            parentSymbolState,
+            listState,
             iteration,
             rule,
-            nextSymbolState,
-            prevSymbolState,
-            parentSymbolState,
+            index,
           }),
         ];
       },

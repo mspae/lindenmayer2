@@ -7,29 +7,29 @@ import {
 } from "./utils/types";
 
 export const applySuccessorRule = <Params extends object = {}>({
-  currentSymbolState,
+  symbolState,
   rule,
   iteration,
-  prevSymbolState,
-  nextSymbolState,
   parentSymbolState,
+  listState,
+  index,
 }: {
-  currentSymbolState: SymbolState<Params>;
+  symbolState: SymbolState<Params>;
+  parentSymbolState?: SymbolState<Params>;
+  listState: SymbolListState<Params>;
+  index: number;
   rule: RuleDefinition<Params>;
   iteration: number;
-  prevSymbolState?: SymbolState<Params>;
-  nextSymbolState?: SymbolState<Params>;
-  parentSymbolState?: SymbolState<Params>;
 }): SymbolListState<Params> => {
   // FunctionSuccessor
   if (typeof rule.successor === "function") {
     return [
       {
         ...rule.successor({
-          currentSymbolState,
-          prevSymbolState,
-          nextSymbolState,
+          symbolState,
           parentSymbolState,
+          listState,
+          index,
         }),
         lastTouched: iteration,
       },
@@ -46,15 +46,15 @@ export const applySuccessorRule = <Params extends object = {}>({
         rule.successor as unknown as StochasticSuccessor<Params>
       );
       return applySuccessorRule({
-        currentSymbolState,
+        symbolState,
         rule: {
           ...rule,
           successor: randomlySelectedValue.successor,
         },
         iteration,
-        prevSymbolState,
-        nextSymbolState,
         parentSymbolState,
+        listState,
+        index,
       });
     }
 

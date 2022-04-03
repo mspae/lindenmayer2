@@ -27,10 +27,10 @@ export type StochasticSuccessor<Params extends object = {}> = {
 }[];
 
 export type FunctionSuccessor<Params extends object = {}> = (context: {
-  currentSymbolState: SymbolState<Params>;
+  symbolState: SymbolState<Params>;
   parentSymbolState?: SymbolState<Params>;
-  prevSymbolState?: SymbolState<Params>;
-  nextSymbolState?: SymbolState<Params>;
+  index?: number;
+  listState: SymbolListState<Params>;
 }) => SymbolState<Params>;
 
 export type Successor<Params extends object = {}> =
