@@ -9,3 +9,4 @@ export {
   or,
   relativeTo,
 } from "./condition";
+export * from "./utils/types";

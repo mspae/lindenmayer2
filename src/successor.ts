@@ -2,8 +2,8 @@ import { randomlySelectValueByProbability } from "./utils/random";
 import {
   RuleDefinition,
   StochasticSuccessor,
-  SymbolState,
   SymbolListState,
+  SymbolState,
 } from "./utils/types";
 
 export const applySuccessorRule = <Params extends object = {}>({

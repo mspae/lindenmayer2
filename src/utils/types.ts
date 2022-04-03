@@ -17,8 +17,6 @@ export type RuleDefinition<Params extends object = {}> = {
   allowOverride?: boolean;
 };
 
-export type ContextIdentifier = string | string[];
-
 // Successor types
 export type StochasticSuccessor<Params extends object = {}> = {
   successor: Successor<Params>;
