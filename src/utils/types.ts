@@ -1,3 +1,5 @@
+import { Condition } from "../condition";
+
 export type SymbolListState<Params extends object = {}> = SymbolState<Params>[];
 
 export type SymbolState<Params extends object = {}> = {
@@ -8,14 +10,11 @@ export type SymbolState<Params extends object = {}> = {
 };
 
 export type RuleDefinition<Params extends object = {}> = {
-  symbol: string;
-  /** match only if the previous Symbol equaled prevSymbol (string) or if the
-   * previous symbol was one of prevSymbol (string[]) */
-  prevSymbol?: ContextIdentifier;
-  /** match only if the next Symbol equaled nextSymbol (string) or if the next
-   * symbol was one of nextSymbol (string[]) */
-  nextSymbol?: ContextIdentifier;
+  id: string;
+  condition: Condition<Params>;
   successor: Successor<Params>;
+  /** override other rules which were applied in the same iteration */
+  allowOverride?: boolean;
 };
 
 export type ContextIdentifier = string | string[];

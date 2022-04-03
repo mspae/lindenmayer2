@@ -1,3 +1,4 @@
+import { and, matchSymbol, relativeTo } from "./condition";
 import { LSystem } from "./lsystem";
 import { SymbolListState } from "./utils/types";
 
@@ -16,11 +17,13 @@ test("simple usage", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: strToSymbolList("AB"),
       },
       {
-        symbol: "B",
+        id: "B",
+        condition: matchSymbol("B"),
         successor: {
           symbol: "A",
         },
@@ -44,20 +47,23 @@ test("dynamic rule management", () => {
   });
 
   instance.addRule({
-    symbol: "A",
+    id: "A",
+    condition: matchSymbol("A"),
     successor: strToSymbolList("ABZA"),
   });
   instance.addRule({
-    symbol: "A",
+    id: "A",
+    condition: matchSymbol("A"),
     successor: strToSymbolList("AB"),
   });
   instance.addRule({
-    symbol: "B",
+    id: "B",
+    condition: matchSymbol("B"),
     successor: {
       symbol: "A",
     },
   });
-  instance.removeRule({ symbol: "B" });
+  instance.removeRule({ id: "B" });
 
   expect(instance.getOutput(1)).toMatchObject(strToSymbolList("AB"));
   expect(instance.getOutput(2)).toMatchObject(strToSymbolList("ABB"));
@@ -70,11 +76,13 @@ test("system definition serialization", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: strToSymbolList("AB"),
       },
       {
-        symbol: "B",
+        id: "B",
+        condition: matchSymbol("B"),
         successor: {
           symbol: "A",
         },
@@ -105,11 +113,13 @@ test("successor functions", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: strToSymbolList("AB"),
       },
       {
-        symbol: "B",
+        id: "B",
+        condition: matchSymbol("B"),
         successor: (args) => ({
           symbol: "BA",
           params: { foo: 1 },
@@ -133,17 +143,18 @@ test("context-aware successor definitions", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: strToSymbolList("CAB"),
       },
       {
-        symbol: "B",
+        id: "B",
+        condition: and(matchSymbol("B"), relativeTo(-1, matchSymbol("A"))),
         successor: strToSymbolList("ACBBC"),
-        prevSymbol: "A",
       },
       {
-        symbol: "C",
-        nextSymbol: "B",
+        id: "C",
+        condition: and(matchSymbol("C"), relativeTo(1, matchSymbol("B"))),
         successor: strToSymbolList("AB"),
       },
     ],
@@ -156,7 +167,8 @@ test("stochastic successor definitions", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: [
           {
             successor: strToSymbolList("A1"),
@@ -180,7 +192,8 @@ test.only("branch definitions", () => {
     initial: strToSymbolList("A"),
     rules: [
       {
-        symbol: "A",
+        id: "A",
+        condition: matchSymbol("A"),
         successor: {
           symbol: "B",
           branch: [
@@ -194,7 +207,8 @@ test.only("branch definitions", () => {
         },
       },
       {
-        symbol: "C",
+        id: "C",
+        condition: matchSymbol("C"),
         successor: strToSymbolList("ZCAB"),
       },
     ],

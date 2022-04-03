@@ -1,6 +1,6 @@
+import { matchCondition } from "./condition";
 import { IterationCache } from "./iteration-cache";
 import { applySuccessorRule } from "./successor";
-import { randomlySelectValueByProbability } from "./utils/random";
 import { SymbolState, SymbolListState, RuleDefinition } from "./utils/types";
 
 export class LSystem<Params extends object = {}> {
@@ -17,26 +17,22 @@ export class LSystem<Params extends object = {}> {
   }) {
     this._cache = new IterationCache();
     this._rules = new Map(
-      rules
-        ? rules.reduce((acc, rule) => [...acc, [rule.symbol, rule]], [])
-        : []
+      rules ? rules.reduce((acc, rule) => [...acc, [rule.id, rule]], []) : []
     );
     this._initial = initial;
     this._cache.cleanCache();
   }
 
   addRule(rule: RuleDefinition<Params>) {
-    this._rules.set(rule.symbol, rule);
+    this._rules.set(rule.id, rule);
     this._cache.cleanCache();
   }
 
-  removeRule(rule: Omit<RuleDefinition<Params>, "successor">) {
-    if (!this._rules.has(rule.symbol)) {
-      throw new Error(
-        `Cannot remove rule for symbol ${rule.symbol}, it was not found!`
-      );
+  removeRule(rule: Pick<RuleDefinition<Params>, "id">) {
+    if (!this._rules.has(rule.id)) {
+      throw new Error(`Cannot remove rule ${rule.id}, it was not found!`);
     }
-    this._rules.delete(rule.symbol);
+    this._rules.delete(rule.id);
     this._cache.cleanCache();
   }
 
@@ -144,13 +140,22 @@ export class LSystem<Params extends object = {}> {
     return input.reduce<SymbolListState<Params>>(
       (acc, symbolState, index, listState) => {
         // Early return if the state was touched within this iteration
-        // (previous rule)
-        if (symbolState.lastTouched === iteration) {
+        // (previous rule) and if rule.allowOverride is not set to true
+        if (symbolState.lastTouched === iteration && !rule.allowOverride) {
           return [...acc, symbolState];
         }
 
-        // Early return if the symbol does not match
-        if (symbolState.symbol !== rule.symbol) {
+        if (
+          !matchCondition<Params>({
+            condition: rule.condition,
+            symbolState,
+            parentSymbolState,
+            listState,
+            index,
+            iteration,
+          })
+        ) {
+          // Early return if the condition does not match
           return [...acc, symbolState];
         }
 
