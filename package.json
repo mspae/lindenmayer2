@@ -6,7 +6,7 @@
   "source": "src/index.ts",
   "exports": {
     "require": "./dist/lindenmayer2.cjs",
-    "default": "./dist/lindenmayer2.modern.js"
+    "default": "./dist/lindenmayer2.module.modern.js"
   },
   "main": "./dist/lindenmayer2.module.cjs",
   "typings": "./dist/index",
