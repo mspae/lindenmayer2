@@ -2,20 +2,20 @@
   "name": "lindenmayer2",
   "type": "module",
   "description": "Yet another L-system implementation.",
-  "version": "0.2.4",
-  "source": "src/index.ts",
+  "version": "0.2.5",
   "exports": {
-    "require": "./dist/lindenmayer2.cjs",
-    "default": "./dist/lindenmayer2.module.modern.js"
+    "require": "./dist/index.cjs",
+    "default": "./dist/index.modern.js"
   },
-  "main": "./dist/lindenmayer2.module.cjs",
-  "typings": "./dist/index",
-  "module": "./dist/lindenmayer2.module.js",
-  "unpkg": "./dist/lindenmayer2.umd.js",
+  "source": "src/index.ts",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.modern.module.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.umd.js",
   "author": "Martin Spencer <mail@martinspencer.de>",
   "license": "MIT",
   "scripts": {
-    "build": "microbundle --workers",
+    "build": "rimraf dist && microbundle --workers",
     "dev": "microbundle watch",
     "test": "jest",
     "test:debug": "node --inspect-brk=0.0.0.0 ./node_modules/jest/bin/jest.js",
@@ -28,6 +28,7 @@
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "microbundle": "^0.14.2",
+    "rimraf": "^3.0.2",
     "ts-jest": "^27.1.4",
     "typescript": "^4.6.3"
   },
