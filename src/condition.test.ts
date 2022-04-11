@@ -1,13 +1,15 @@
 import {
-  after,
+  afterAny,
+  afterAll,
   and,
-  before,
+  beforeAny,
   matchCallback,
   matchCondition,
   matchSymbol,
   not,
   or,
   relativeTo,
+  beforeAll,
 } from "./condition";
 
 test("matching with a simple symbol matcher", () => {
@@ -80,12 +82,12 @@ test("matching with a relativeTo condition", () => {
   expect(matchedSymbols[0]).toMatchObject(input[1]);
 });
 
-test("matching with a before condition", () => {
+test("matching with a beforeAny condition", () => {
   const input = [{ symbol: "A" }, { symbol: "B" }, { symbol: "C" }];
 
   const matchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
-      condition: before(matchSymbol("B")),
+      condition: beforeAny(matchSymbol("B")),
       index,
       symbolState,
       iteration: 1,
@@ -93,16 +95,36 @@ test("matching with a before condition", () => {
     })
   );
 
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: beforeAny(matchSymbol("A")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  expect(notMatchedSymbols).toHaveLength(0);
   expect(matchedSymbols).toHaveLength(1);
   expect(matchedSymbols[0]).toMatchObject(input[0]);
 });
 
-test("matching with an after condition", () => {
+test("matching with an afterAny condition", () => {
   const input = [{ symbol: "A" }, { symbol: "B" }, { symbol: "C" }];
 
   const matchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
-      condition: after(matchSymbol("B")),
+      condition: afterAny(matchSymbol("B")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: afterAny(matchSymbol("C")),
       index,
       symbolState,
       iteration: 1,
@@ -110,8 +132,77 @@ test("matching with an after condition", () => {
     })
   );
 
+  expect(notMatchedSymbols).toHaveLength(0);
   expect(matchedSymbols).toHaveLength(1);
   expect(matchedSymbols[0]).toMatchObject(input[2]);
+});
+
+test("matching with a beforeAll condition", () => {
+  const input = [
+    { symbol: "C" },
+    { symbol: "A" },
+    { symbol: "B" },
+    { symbol: "B" },
+  ];
+
+  const matchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: beforeAll(matchSymbol("B")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: beforeAll(matchSymbol("A")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  expect(notMatchedSymbols).toHaveLength(0);
+  expect(matchedSymbols).toHaveLength(2);
+  expect(matchedSymbols[0]).toMatchObject(input[1]);
+  expect(matchedSymbols[1]).toMatchObject(input[2]);
+});
+
+test.only("matching with an afterAll condition", () => {
+  const input = [
+    { symbol: "B" },
+    { symbol: "B" },
+    { symbol: "A" },
+    { symbol: "C" },
+  ];
+
+  const matchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: afterAll(matchSymbol("B")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: afterAll(matchSymbol("A")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  expect(notMatchedSymbols).toHaveLength(0);
+  expect(matchedSymbols).toHaveLength(2);
+  expect(matchedSymbols[0]).toMatchObject(input[1]);
+  expect(matchedSymbols[1]).toMatchObject(input[2]);
 });
 
 test("matching with an and group condition", () => {

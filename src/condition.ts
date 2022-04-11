@@ -40,25 +40,47 @@ export const relativeTo = <Params extends object = {}>(
   condition,
 });
 
-type BeforeCondition<Params extends object = {}> = {
-  type: "before";
+type BeforeAllCondition<Params extends object = {}> = {
+  type: "before_all";
   condition: Condition<Params>;
 };
-export const before = <Params extends object = {}>(
+export const beforeAll = <Params extends object = {}>(
   condition: Condition<Params>
-): BeforeCondition<Params> => ({
-  type: "before",
+): BeforeAllCondition<Params> => ({
+  type: "before_all",
   condition,
 });
 
-type AfterCondition<Params extends object = {}> = {
-  type: "after";
+type AfterAllCondition<Params extends object = {}> = {
+  type: "after_all";
   condition: Condition<Params>;
 };
-export const after = <Params extends object = {}>(
+export const afterAll = <Params extends object = {}>(
   condition: Condition<Params>
-): AfterCondition<Params> => ({
-  type: "after",
+): AfterAllCondition<Params> => ({
+  type: "after_all",
+  condition,
+});
+
+type BeforeAnyCondition<Params extends object = {}> = {
+  type: "before_any";
+  condition: Condition<Params>;
+};
+export const beforeAny = <Params extends object = {}>(
+  condition: Condition<Params>
+): BeforeAnyCondition<Params> => ({
+  type: "before_any",
+  condition,
+});
+
+type AfterAnyCondition<Params extends object = {}> = {
+  type: "after_any";
+  condition: Condition<Params>;
+};
+export const afterAny = <Params extends object = {}>(
+  condition: Condition<Params>
+): AfterAnyCondition<Params> => ({
+  type: "after_any",
   condition,
 });
 
@@ -98,8 +120,10 @@ export const and = <Params extends object = {}>(
 export type Condition<Params extends object = {}> =
   | MatchSymbolCondition
   | MatchCallbackCondition<Params>
-  | BeforeCondition<Params>
-  | AfterCondition<Params>
+  | BeforeAllCondition<Params>
+  | AfterAllCondition<Params>
+  | BeforeAnyCondition<Params>
+  | AfterAnyCondition<Params>
   | RelativeToCondition<Params>
   | NotCondition<Params>
   | OrGroupCondition<Params>
@@ -136,12 +160,14 @@ export const matchCondition = <Params extends object = {}>(context: {
     }
     return condition.symbol === symbolState.symbol;
   }
-  if (condition.type === "after") {
+
+  if (condition.type === "after_any" || condition.type === "after_all") {
     if (index === 0) {
       return false;
     }
     const previousSymbols = listState.slice(0, index);
-    return previousSymbols.some((prevSymbol, index) =>
+    const arrayMethod = condition.type === "after_any" ? "some" : "every";
+    return previousSymbols[arrayMethod]((prevSymbol, index) =>
       matchCondition({
         ...context,
         condition: condition.condition,
@@ -150,12 +176,13 @@ export const matchCondition = <Params extends object = {}>(context: {
       })
     );
   }
-  if (condition.type === "before") {
+  if (condition.type === "before_any" || condition.type === "before_all") {
     if (index === listState.length - 1) {
       return false;
     }
     const nextSymbols = listState.slice(index + 1);
-    return nextSymbols.some((prevSymbol, afterIndex) =>
+    const arrayMethod = condition.type === "before_any" ? "some" : "every";
+    return nextSymbols[arrayMethod]((prevSymbol, afterIndex) =>
       matchCondition({
         ...context,
         condition: condition.condition,
