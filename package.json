@@ -2,7 +2,7 @@
   "name": "lindenmayer2",
   "type": "module",
   "description": "Yet another L-system implementation.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "exports": {
     "require": "./dist/index.cjs",
     "default": "./dist/index.modern.js"
