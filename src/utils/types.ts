@@ -28,7 +28,7 @@ export type FunctionSuccessor<Params extends object = {}> = (context: {
   parentSymbolState?: SymbolState<Params>;
   index?: number;
   listState: SymbolListState<Params>;
-}) => SymbolState<Params>;
+}) => SymbolState<Params> | SymbolState<Params>[];
 
 export type Successor<Params extends object = {}> =
   | SymbolState<Params>
