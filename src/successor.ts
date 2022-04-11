@@ -23,17 +23,23 @@ export const applySuccessorRule = <Params extends object = {}>({
 }): SymbolListState<Params> => {
   // FunctionSuccessor
   if (typeof rule.successor === "function") {
-    return [
-      {
-        ...rule.successor({
-          symbolState,
-          parentSymbolState,
-          listState,
-          index,
-        }),
-        lastTouched: iteration,
-      },
-    ];
+    const successorResult = rule.successor({
+      symbolState,
+      parentSymbolState,
+      listState,
+      index,
+    });
+    return Array.isArray(successorResult)
+      ? successorResult.map((item) => ({
+          ...item,
+          lastTouched: iteration,
+        }))
+      : [
+          {
+            ...successorResult,
+            lastTouched: iteration,
+          },
+        ];
   }
 
   if (Array.isArray(rule.successor)) {

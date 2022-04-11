@@ -122,7 +122,7 @@ test("system definition serialization", () => {
   );
 });
 
-test("successor functions", () => {
+test("successor functions (single symbol return)", () => {
   const instance = new LSystem({
     initial: strToSymbolList("A"),
     rules: [
@@ -149,6 +149,45 @@ test("successor functions", () => {
     { lastTouched: 4, params: { foo: 1 }, symbol: "BA" },
     { lastTouched: 3, params: { foo: 1 }, symbol: "BA" },
     { lastTouched: 2, params: { foo: 1 }, symbol: "BA" },
+  ]);
+});
+
+test("successor functions (symbol array return)", () => {
+  const instance = new LSystem({
+    initial: strToSymbolList("A"),
+    rules: [
+      {
+        id: "A",
+        condition: matchSymbol("A"),
+        successor: strToSymbolList("AB"),
+      },
+      {
+        id: "B",
+        condition: matchSymbol("B"),
+        successor: (args) => [
+          {
+            symbol: "BA",
+            params: { foo: 1 },
+          },
+          {
+            symbol: "C",
+          },
+        ],
+      },
+    ],
+  });
+
+  expect(instance.getOutput(5)).toMatchObject([
+    { lastTouched: 5, symbol: "A" },
+    { lastTouched: 5, symbol: "B" },
+    { lastTouched: 5, params: { foo: 1 }, symbol: "BA" },
+    { lastTouched: 5, symbol: "C" },
+    { lastTouched: 4, params: { foo: 1 }, symbol: "BA" },
+    { lastTouched: 4, symbol: "C" },
+    { lastTouched: 3, params: { foo: 1 }, symbol: "BA" },
+    { lastTouched: 3, symbol: "C" },
+    { lastTouched: 2, params: { foo: 1 }, symbol: "BA" },
+    { lastTouched: 2, symbol: "C" },
   ]);
 });
 
