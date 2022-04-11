@@ -63,7 +63,7 @@ test("dynamic rule management", () => {
       symbol: "A",
     },
   });
-  instance.removeRule({ id: "B" });
+  instance.removeRule("B");
 
   expect(instance.getOutput(1)).toMatchObject(strToSymbolList("AB"));
   expect(instance.getOutput(2)).toMatchObject(strToSymbolList("ABB"));

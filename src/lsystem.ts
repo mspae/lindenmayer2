@@ -7,57 +7,85 @@ export class LSystem<Params extends object = {}> {
   private _cache: IterationCache<Params>;
   private _rules: Map<string, RuleDefinition<Params>>;
   private _initial: SymbolListState<Params>;
+  private _persistStateAfterRuleChanges: boolean;
 
   constructor({
     rules,
     initial,
+    persistStateAfterRuleChanges = false,
   }: {
     initial: SymbolListState<Params>;
     rules?: RuleDefinition<Params>[];
+    persistStateAfterRuleChanges?: boolean;
   }) {
+    this._persistStateAfterRuleChanges = persistStateAfterRuleChanges;
     this._cache = new IterationCache();
     this._rules = new Map(
       rules ? rules.reduce((acc, rule) => [...acc, [rule.id, rule]], []) : []
     );
     this._initial = initial;
+  }
+
+  /**
+   * Force a cleaning of the cache.
+   */
+  public cleanCache() {
     this._cache.cleanCache();
   }
 
-  addRule(rule: RuleDefinition<Params>) {
+  /**
+   * Dynamically add a production rule.
+   */
+  public addRule(rule: RuleDefinition<Params>) {
     this._rules.set(rule.id, rule);
-    this._cache.cleanCache();
-  }
-
-  removeRule(rule: Pick<RuleDefinition<Params>, "id">) {
-    if (!this._rules.has(rule.id)) {
-      throw new Error(`Cannot remove rule ${rule.id}, it was not found!`);
+    if (!this._persistStateAfterRuleChanges) {
+      this._cache.cleanCache();
     }
-    this._rules.delete(rule.id);
-    this._cache.cleanCache();
   }
 
-  getOutput(
+  /**
+   * Dynamically remove a production rule by its id.
+   */
+  public removeRule(id: string) {
+    if (!this._rules.has(id)) {
+      throw new Error(`Cannot remove rule ${id}, it was not found!`);
+    }
+    this._rules.delete(id);
+    if (!this._persistStateAfterRuleChanges) {
+      this._cache.cleanCache();
+    }
+  }
+
+  /**
+   * Get the output for a specified iteration. Optionally force recomputation
+   * of this iteration's output and optionally force recomputation of all
+   * previous iterations.
+   */
+  public getOutput(
     iteration: number,
-    bypassCache = false,
-    recalculateAllIterations = false
+    forceRecomputationOfIteration = false,
+    forceRecomputationOfPreviousIterations = false
   ) {
-    if (!bypassCache) {
+    if (!forceRecomputationOfIteration) {
       const cachedOutput = this._cache.requestIteration(iteration);
       if (cachedOutput) {
         return cachedOutput;
       }
     }
 
-    return this.getOutputForIteration(iteration, recalculateAllIterations);
+    return this.getOutputForIteration(
+      iteration,
+      forceRecomputationOfPreviousIterations
+    );
   }
 
   /**
-   * Get a string reprensation of the system definition.
+   * Get a string representation of the system definition.
    *
    * Note: This may not work properly if you are using object references and
    * successor functions in your rule set.
    */
-  getSerializedSystemDefintion() {
+  public getSerializedSystemDefintion() {
     return JSON.stringify([this._initial, Array.from(this._rules.entries())]);
   }
 
@@ -67,7 +95,7 @@ export class LSystem<Params extends object = {}> {
    * Note: This may not work properly if you are using object references and
    * successor functions in your rule set.
    */
-  setSystemDefinitionFromSerializedString(input: string) {
+  public setSystemDefinitionFromSerializedString(input: string) {
     try {
       const [initial, rules] = JSON.parse(input);
       this._initial = initial;
@@ -77,28 +105,38 @@ export class LSystem<Params extends object = {}> {
     }
   }
 
-  private getOutputForIteration(n: number, recalculateAllIterations = false) {
+  /**
+   * Get the result of applying all production rules on an input. Optionally
+   * force recomputation of all previous iterations.
+   */
+  private getOutputForIteration(
+    iteration: number,
+    forceRecomputationOfPreviousIterations = false
+  ) {
     let currIteration = 0;
     let currResult = this._initial;
 
-    if (n === 0) {
+    if (iteration === 0) {
       return this._initial;
     }
 
-    if (!recalculateAllIterations) {
-      let cacheN = n - 1;
-      while (typeof currResult === "undefined" && cacheN > 0) {
-        const cachedValue = this._cache.requestIteration(cacheN);
+    // attempt to find a previous iteration's state from which to continue
+    // calculation. Start at n - 1 and work down to 0.
+    if (!forceRecomputationOfPreviousIterations) {
+      let cachedIteration = iteration - 1;
+      while (typeof currResult === "undefined" && cachedIteration > 0) {
+        const cachedValue = this._cache.requestIteration(cachedIteration);
         if (cachedValue) {
-          currIteration = cacheN;
+          currIteration = cachedIteration;
           currResult = cachedValue;
         } else {
-          cacheN = cacheN - 1;
+          cachedIteration = cachedIteration - 1;
         }
       }
     }
 
-    while (currIteration < n) {
+    // Calculate all missing iterations before n
+    while (currIteration < iteration) {
       currIteration = currIteration + 1;
       currResult = this.applyRules(currResult, currIteration);
 
@@ -108,6 +146,9 @@ export class LSystem<Params extends object = {}> {
     return currResult;
   }
 
+  /**
+   * Apply all productive rules on an input.
+   */
   private applyRules(
     input: SymbolListState<Params>,
     iteration: number,
@@ -131,6 +172,9 @@ export class LSystem<Params extends object = {}> {
     return result;
   }
 
+  /**
+   * Apply a single production rule on an input.
+   */
   private applyRule(
     input: SymbolListState<Params>,
     rule: RuleDefinition<Params>,
