@@ -71,57 +71,6 @@ test("dynamic rule management", () => {
   expect(instance.getOutput(4)).toMatchObject(strToSymbolList("ABBBB"));
 });
 
-test("system definition serialization", () => {
-  const instance = new LSystem({
-    initial: strToSymbolList("A"),
-    rules: [
-      {
-        id: "A",
-        condition: matchSymbol("A"),
-        successor: strToSymbolList("AB"),
-      },
-      {
-        id: "B",
-        condition: matchSymbol("B"),
-        successor: {
-          symbol: "A",
-        },
-      },
-    ],
-  });
-
-  expect(instance.getSerializedSystemDefintion()).toEqual(
-    '[[{"symbol":"A"}],[["A",{"id":"A","condition":{"type":"match_symbol","symbol":"A"},"successor":[{"symbol":"A"},{"symbol":"B"}]}],["B",{"id":"B","condition":{"type":"match_symbol","symbol":"B"},"successor":{"symbol":"A"}}]]]'
-  );
-
-  instance.setSystemDefinitionFromSerializedString(
-    JSON.stringify([
-      strToSymbolList("BB"),
-      [
-        [
-          "B",
-          {
-            id: "B",
-            condition: matchSymbol("B"),
-            successor: strToSymbolList("C"),
-          },
-        ],
-        [
-          "A",
-          {
-            id: "A",
-            condition: matchSymbol("A"),
-            successor: strToSymbolList("AAB"),
-          },
-        ],
-      ],
-    ])
-  );
-  expect(instance.getSerializedSystemDefintion()).toEqual(
-    '[[{"symbol":"B"},{"symbol":"B"}],[["B",{"id":"B","condition":{"type":"match_symbol","symbol":"B"},"successor":[{"symbol":"C"}]}],["A",{"id":"A","condition":{"type":"match_symbol","symbol":"A"},"successor":[{"symbol":"A"},{"symbol":"A"},{"symbol":"B"}]}]]]'
-  );
-});
-
 test("successor functions (single symbol return)", () => {
   const instance = new LSystem({
     initial: strToSymbolList("A"),

@@ -1,37 +1,37 @@
 import { Condition } from "../condition";
 
-export type SymbolListState<Params extends object = {}> = SymbolState<Params>[];
+export type SymbolListState<T extends object = {}> = SymbolState<T>[];
 
-export type SymbolState<Params extends object = {}> = {
+export type SymbolState<T extends object = {}> = {
   symbol: string;
-  params?: Params;
-  branch?: SymbolListState<Params>;
+  params?: T;
+  branch?: SymbolListState<T>;
   lastTouched?: number;
 };
 
-export type RuleDefinition<Params extends object = {}> = {
+export type RuleDefinition<T extends object = {}> = {
   id: string;
-  condition: Condition<Params>;
-  successor: Successor<Params>;
+  condition: Condition<T>;
+  successor: Successor<T>;
   /** override other rules which were applied in the same iteration */
   allowOverride?: boolean;
 };
 
 // Successor types
-export type StochasticSuccessor<Params extends object = {}> = {
-  successor: Successor<Params>;
+export type StochasticSuccessor<T extends object = {}> = {
+  successor: Successor<T>;
   probability: number;
 }[];
 
-export type FunctionSuccessor<Params extends object = {}> = (context: {
-  symbolState: SymbolState<Params>;
-  parentSymbolState?: SymbolState<Params>;
+export type FunctionSuccessor<T extends object = {}> = (context: {
+  symbolState: SymbolState<T>;
+  parentSymbolState?: SymbolState<T>;
   index?: number;
-  listState: SymbolListState<Params>;
-}) => SymbolState<Params> | SymbolState<Params>[];
+  listState: SymbolListState<T>;
+}) => SymbolState<T> | SymbolState<T>[];
 
-export type Successor<Params extends object = {}> =
-  | SymbolState<Params>
-  | SymbolState<Params>[]
-  | FunctionSuccessor<Params>
-  | StochasticSuccessor<Params>;
+export type Successor<T extends object = {}> =
+  | SymbolState<T>
+  | SymbolState<T>[]
+  | FunctionSuccessor<T>
+  | StochasticSuccessor<T>;

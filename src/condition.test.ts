@@ -3,13 +3,13 @@ import {
   afterAll,
   and,
   beforeAny,
-  matchCallback,
   matchCondition,
   matchSymbol,
   not,
   or,
   relativeTo,
   beforeAll,
+  Condition,
 } from "./condition";
 
 test("matching with a simple symbol matcher", () => {
@@ -31,13 +31,12 @@ test("matching with a simple symbol matcher", () => {
 
 test("matching with a callback function", () => {
   const input = [{ symbol: "A", params: { lol: 1 } }, { symbol: "B" }];
-
+  const conditionFn: Condition<{ lol?: number }> = ({ symbolState }) =>
+    typeof symbolState.params?.lol !== "undefined";
   const matchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
-      condition: matchCallback<{ lol?: number }>(
-        ({ symbolState }) => typeof symbolState.params?.lol !== "undefined"
-      ),
-      index,
+      condition: conditionFn,
+      index: index,
       symbolState,
       iteration: 1,
       listState: input,
@@ -212,15 +211,12 @@ test("matching with an and group condition", () => {
     { symbol: "A" },
     { symbol: "C" },
   ];
+  const conditionFn: Condition<{ flag: number }> = ({ symbolState }) =>
+    symbolState.params?.flag === 1;
 
   const matchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
-      condition: and(
-        matchSymbol("A"),
-        matchCallback<{ flag: number }>(
-          ({ symbolState }) => symbolState.params?.flag === 1
-        )
-      ),
+      condition: and(matchSymbol("A"), conditionFn),
       index,
       symbolState,
       iteration: 1,
@@ -239,15 +235,12 @@ test("matching with an or group condition", () => {
     { symbol: "A" },
     { symbol: "C" },
   ];
+  const conditionFn: Condition<{ flag: number }> = ({ symbolState }) =>
+    symbolState.params?.flag === 1;
 
   const matchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
-      condition: or(
-        matchSymbol("C"),
-        matchCallback<{ flag: number }>(
-          ({ symbolState }) => symbolState.params?.flag === 1
-        )
-      ),
+      condition: or(matchSymbol("C"), conditionFn),
       index,
       symbolState,
       iteration: 1,

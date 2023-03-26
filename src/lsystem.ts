@@ -80,32 +80,6 @@ export class LSystem<Params extends object = {}> {
   }
 
   /**
-   * Get a string representation of the system definition.
-   *
-   * Note: This may not work properly if you are using object references and
-   * successor functions in your rule set.
-   */
-  public getSerializedSystemDefintion() {
-    return JSON.stringify([this._initial, Array.from(this._rules.entries())]);
-  }
-
-  /**
-   * Set the system definition from a serialized string.
-   *
-   * Note: This may not work properly if you are using object references and
-   * successor functions in your rule set.
-   */
-  public setSystemDefinitionFromSerializedString(input: string) {
-    try {
-      const [initial, rules] = JSON.parse(input);
-      this._initial = initial;
-      this._rules = new Map(rules);
-    } catch (e) {
-      throw new Error("Failed parsing serialized system definition!");
-    }
-  }
-
-  /**
    * Get the result of applying all production rules on an input. Optionally
    * force recomputation of all previous iterations.
    */
