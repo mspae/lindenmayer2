@@ -44,7 +44,7 @@ export const after =
     }
     const previousIndex = ctx.index - 1;
     const previousSymbol = ctx.listState[previousIndex];
-    condition({
+    return condition({
       ...ctx,
       condition,
       index: previousIndex,
@@ -94,7 +94,7 @@ export const before =
     }
     const nextIndex = ctx.index + 1;
     const nextSymbol = ctx.listState[nextIndex];
-    condition({
+    return condition({
       ...ctx,
       condition,
       index: nextIndex,
