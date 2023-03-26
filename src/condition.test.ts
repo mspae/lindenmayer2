@@ -10,6 +10,8 @@ import {
   relativeTo,
   beforeAll,
   Condition,
+  after,
+  before,
 } from "./condition";
 
 test("matching with a simple symbol matcher", () => {
@@ -170,7 +172,41 @@ test("matching with a beforeAll condition", () => {
   expect(matchedSymbols[1]).toMatchObject(input[2]);
 });
 
-test.only("matching with an afterAll condition", () => {
+test("matching with a before condition", () => {
+  const input = [
+    { symbol: "C" },
+    { symbol: "B" },
+    { symbol: "A" },
+    { symbol: "B" },
+  ];
+
+  const matchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: before(matchSymbol("B")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: before(matchSymbol("C")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  expect(notMatchedSymbols).toHaveLength(0);
+  expect(matchedSymbols).toHaveLength(2);
+  expect(matchedSymbols[0]).toMatchObject(input[0]);
+  expect(matchedSymbols[1]).toMatchObject(input[2]);
+});
+
+test("matching with an afterAll condition", () => {
   const input = [
     { symbol: "B" },
     { symbol: "B" },
@@ -191,6 +227,40 @@ test.only("matching with an afterAll condition", () => {
   const notMatchedSymbols = input.filter((symbolState, index) =>
     matchCondition({
       condition: afterAll(matchSymbol("A")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  expect(notMatchedSymbols).toHaveLength(0);
+  expect(matchedSymbols).toHaveLength(2);
+  expect(matchedSymbols[0]).toMatchObject(input[1]);
+  expect(matchedSymbols[1]).toMatchObject(input[2]);
+});
+
+test("matching with an after condition", () => {
+  const input = [
+    { symbol: "B" },
+    { symbol: "B" },
+    { symbol: "A" },
+    { symbol: "C" },
+  ];
+
+  const matchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: after(matchSymbol("B")),
+      index,
+      symbolState,
+      iteration: 1,
+      listState: input,
+    })
+  );
+
+  const notMatchedSymbols = input.filter((symbolState, index) =>
+    matchCondition({
+      condition: after(matchSymbol("C")),
       index,
       symbolState,
       iteration: 1,
