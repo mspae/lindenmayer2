@@ -1,11 +1,12 @@
 export * from "./lsystem";
 export {
+  after,
   afterAny,
   afterAll,
   and,
+  before,
   beforeAny,
   beforeAll,
-  matchCallback,
   matchSymbol,
   not,
   or,
