@@ -126,21 +126,27 @@ export class LSystem<Params extends object = {}> {
   private applyRules(
     input: SymbolListState<Params>,
     iteration: number,
-    parentSymbolState?: SymbolState<Params>
+    parentSymbolState?: SymbolState<Params>,
+    parentSymbolIndex?: number
   ) {
-    let result = input.map((symbolState) => {
+    let result = input.map((symbolState, parentIndex) => {
       if (typeof symbolState.branch === "undefined") {
         return symbolState;
       }
       // is branch symbol, perform replacement on the branch symbols first
       return {
         ...symbolState,
-        branch: this.applyRules(symbolState.branch, iteration, symbolState),
+        branch: this.applyRules(
+          symbolState.branch,
+          iteration,
+          symbolState,
+          parentIndex
+        ),
       };
     });
 
     this._rules.forEach((def) => {
-      result = this.applyRule(result, def, iteration, parentSymbolState);
+      result = this.applyRule(result, def, iteration, parentSymbolState, parentSymbolIndex);
     });
 
     return result;
@@ -153,7 +159,8 @@ export class LSystem<Params extends object = {}> {
     input: SymbolListState<Params>,
     rule: RuleDefinition<Params>,
     iteration: number,
-    parentSymbolState?: SymbolState<Params>
+    parentSymbolState?: SymbolState<Params>,
+    parentSymbolIndex?: number
   ) {
     return input.reduce<SymbolListState<Params>>(
       (acc, symbolState, index, listState) => {
@@ -168,6 +175,7 @@ export class LSystem<Params extends object = {}> {
             condition: rule.condition,
             symbolState,
             parentSymbolState,
+            parentSymbolIndex,
             listState,
             index,
             iteration,
@@ -182,6 +190,7 @@ export class LSystem<Params extends object = {}> {
           ...applySuccessorRule({
             symbolState,
             parentSymbolState,
+            parentSymbolIndex,
             listState,
             iteration,
             rule,

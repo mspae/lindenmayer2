@@ -157,6 +157,7 @@ export const matchCondition = <T extends object = {}>(context: {
   condition: Condition<T>;
   symbolState: SymbolState<T>;
   parentSymbolState?: SymbolState<T>;
+  parentSymbolIndex?: number;
   listState: SymbolListState<T>;
   index: number;
   iteration: number;

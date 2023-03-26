@@ -11,11 +11,13 @@ export const applySuccessorRule = <Params extends object = {}>({
   rule,
   iteration,
   parentSymbolState,
+  parentSymbolIndex,
   listState,
   index,
 }: {
   symbolState: SymbolState<Params>;
   parentSymbolState?: SymbolState<Params>;
+  parentSymbolIndex?: number;
   listState: SymbolListState<Params>;
   index: number;
   rule: RuleDefinition<Params>;
@@ -26,6 +28,7 @@ export const applySuccessorRule = <Params extends object = {}>({
     const successorResult = rule.successor({
       symbolState,
       parentSymbolState,
+      parentSymbolIndex,
       listState,
       index,
     });
@@ -59,6 +62,7 @@ export const applySuccessorRule = <Params extends object = {}>({
         },
         iteration,
         parentSymbolState,
+        parentSymbolIndex,
         listState,
         index,
       });

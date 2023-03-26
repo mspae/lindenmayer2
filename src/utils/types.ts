@@ -26,6 +26,7 @@ export type StochasticSuccessor<T extends object = {}> = {
 export type FunctionSuccessor<T extends object = {}> = (context: {
   symbolState: SymbolState<T>;
   parentSymbolState?: SymbolState<T>;
+  parentSymbolIndex?: number;
   index?: number;
   listState: SymbolListState<T>;
 }) => SymbolState<T> | SymbolState<T>[];
