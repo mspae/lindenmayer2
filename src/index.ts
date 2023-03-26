@@ -11,5 +11,7 @@ export {
   not,
   or,
   relativeTo,
+  Condition,
+  ConditionContext
 } from "./condition";
 export * from "./utils/types";
